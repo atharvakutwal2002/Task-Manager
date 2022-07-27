@@ -18,6 +18,8 @@
   },
   "homepage": "https://github.com/atharvakutwal2002/Task-Manager#readme",
   "dependencies": {
-    "mongodb": "^4.8.0"
+    "mongodb": "^3.7.3",
+    "mongoose": "^5.13.14",
+    "validator": "^13.7.0"
   }
 }
