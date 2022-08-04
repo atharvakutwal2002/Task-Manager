@@ -8,6 +8,18 @@ const taskRouter = require("./routers/task");
 const app = express();
 const port = process.env.PORT || 3000;
 
+// app.use((req,res, next)=>{
+//   if(req.method==='GET'){
+//     res.send('GET req are disabled')
+//   }else{
+//     next()
+//   }
+// })
+
+// app.use((req,res,next)=>{
+//   res.status(503).send('Site is under maintainance ! Check back soon .')
+// })
+
 app.use(express.json());
 
 app.use(userRouter);
@@ -19,11 +31,3 @@ app.listen(port, () => {
 });
 
 
-const bcrypt= require('bcryptjs')
-const myFunction=async()=>{
-  const password= "red12345"
-  const hashPassword = await bcrypt.hash(password,8)
-  console.log(password)
-  console.log(hashPassword)
-}
-myFunction()
