@@ -2,6 +2,8 @@ const express = require("express");
 const router = new express.Router();
 const User = require("../models/user");
 const auth = require("../middleware/auth");
+const multer = require("multer");
+const sharp = require('sharp')
 
 router.post("/users", async (req, res) => {
   const user = new User(req.body);
@@ -72,7 +74,7 @@ router.get("/users/me", auth, async (req, res) => {
   //   });
 });
 
-router.patch("/users/me", auth , async (req, res) => {
+router.patch("/users/me", auth, async (req, res) => {
   const updates = Object.keys(req.body);
   const allowedUpdates = ["name", "email", "password", "age"];
   const isValidOperation = updates.every((update) =>
@@ -82,7 +84,6 @@ router.patch("/users/me", auth , async (req, res) => {
     return res.status(400).send({ error: "Invalid Updates !" });
   }
   try {
-    
     updates.forEach((update) => {
       req.user[update] = req.body[update];
     });
@@ -93,7 +94,7 @@ router.patch("/users/me", auth , async (req, res) => {
     //   new: true,
     //   runValidators: true,
     // });
-    
+
     res.send(req.user);
   } catch (e) {
     res.status(400).send(e);
@@ -106,11 +107,53 @@ router.delete("/users/me", auth, async (req, res) => {
     // if (!user) {
     //   return res.status(404).send();
     // }
-    req.user.remove()
+    req.user.remove();
     res.send(req.user);
   } catch (e) {
     res.status(500).send(e);
   }
 });
+
+const upload = multer({
+  limits:{
+    fileSize:1000000
+  },
+  fileFilter(req,file,cb){
+    if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+      return cb(new Error('Please upload an image '))
+    }
+    cb(undefined, true)
+  }
+});
+
+router.post("/users/me/avatar",auth , upload.single("avatar"),async (req, res) => {
+  const buffer = await sharp(req.file.buffer).resize({width:250, height:250}).png().toBuffer()
+  req.user.avatar= buffer
+  await req.user.save()
+  res.send();
+},(error, req,next)=>{
+  res.status(400).send({error: error.message} )
+});
+
+router.delete('/users/me/avatar', auth, async (req,res)=>{
+  req.user.avatar= undefined
+  await req.user.save()
+  res.send()
+})
+
+router.get('/users/:id/avatar', async(req,res)=>{
+  try{
+    const user = await User.findById(req.params.id)
+    if(!user){
+      throw new Error()
+    }
+
+    res.set('Content-Type','image/png')
+    req.send(user.avatar)
+
+  }catch(e){
+    res.status(404).send()
+  }
+})
 
 module.exports = router;
